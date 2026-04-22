@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: yahyeapps-postgress-pv
+  namespace: yahyeapps
+spec:
+  capacity:
+    storage: 2Gi # Make sure this matches the PVC's request
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard-pv-yahyeapps # Ensure this matches the PVC's storageClassName
+  hostPath:
+    path: /db/yahyeapps-db # Ensure this path exists on the node
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgress-pvc-yahyeapps
+  namespace: yahyeapps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 6Gi # Same as the PV's capacityd
+  storageClassName: standard-pv-yahyeapps

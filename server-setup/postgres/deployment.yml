@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-yahyeapps
+  namespace: yahyeapps
+spec:
+  serviceName: "postgres-yahyeapps"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-yahyeapps
+  template:
+    metadata:
+      labels:
+        app: postgres-yahyeapps
+    spec:
+      containers:
+        - name: postgres-yahyeapps
+          image: postgres:17
+          env:
+            - name: TZ
+              value: "Africa/Mogadishu"
+          envFrom:
+            - secretRef:
+                name: yahyeapps-postgres-secret
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+            - mountPath: /docker-entrypoint-initdb.d/
+              name: postgres-init-script-volume
+              readOnly: true
+
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgress-pvc-yahyeapps
+        - name: postgres-init-script-volume
+          configMap:
+            name: postgres-init-script

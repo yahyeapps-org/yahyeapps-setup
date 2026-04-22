@@ -1,0 +1,167 @@
+name: "Deploy "
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  actions: read
+  security-events: write
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  # ----------------------------
+  # 5️⃣ Docker Build & Push
+  # ----------------------------
+  docker:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message == 'deploy'
+    timeout-minutes: 20 # Maximum running time for this job
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PAT_TOKEN }} # Fixed typo: was DOCKER_PAT_TOKEN
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server-setup/self-hosted-github-runners
+          push: true
+          tags: |
+            ${{vars.DOCKER_GIT_ACTION_RUNNER_REPO}}:${{ env.IMAGE_TAG }}
+            ${{vars.DOCKER_GIT_ACTION_RUNNER_REPO}}:latest
+
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # Maximum running time for this job
+    needs: [docker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update image tag in deployment FOR git-actions-self-hosted-runner
+        run: |
+          if [ -f "server-setup/self-hosted-github-runners/deploment.yml" ]; then
+            sed -i "s|image: ${{vars.DOCKER_GIT_ACTION_RUNNER_REPO}}.*|image: ${{vars.DOCKER_GIT_ACTION_RUNNER_REPO}}:${{ env.IMAGE_TAG }}|g" \
+              server-setup/self-hosted-github-runners/deploment.yml
+            echo "✅ Updated deployment.yaml to use image: ${{ vars.DOCKER_GIT_ACTION_RUNNER_REPO }}:${{ env.IMAGE_TAG }}"
+          else
+            echo "⚠️ Warning: server-setup/self-hosted-github-runners/deploment.yml not found, skipping inline update"
+          fi
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST_IP }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH connection
+        run: |
+          if ! ssh -o BatchMode=yes \
+              -o ConnectTimeout=10 \
+              -i ~/.ssh/id_rsa \
+              ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} \
+              "echo Connected successfully"
+          then
+            echo "❌ SSH connection failed, is this user created in in server (github-actions)  "
+            exit 1
+          fi
+
+      - name: Copy files to server
+        run: |
+          scp -o BatchMode=yes -o ConnectTimeout=10 \
+          -i ~/.ssh/id_rsa -r ./server-setup \
+          ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }}:/home/${{ vars.SSH_USER }}/
+
+      - name: Run full server setup on remote machine
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} <<EOF
+            set -euo pipefail
+            cd /home/${{ vars.SSH_USER }}
+
+            echo "🚀 Starting server setup..."
+
+            # ========================
+            # 1. Make scripts executable
+            # ========================
+            find server-setup -type f -name "*.sh" -exec chmod +x {} +
+
+
+            # chage namespace in yaml 
+            find server-setup \( -name "*.yml" -o -name "*.yaml" \) \
+             -exec sed -i "s|^[[:space:]]*namespace: .*|  namespace: ${{ vars.NAMESPACE }}|g" {} +
+
+            # ========================
+            # 2. Server config
+            # ========================
+            ./server-setup/server-config/server-config.sh
+            ./server-setup/server-config/update-cloudflare-ufw.sh
+
+            # ========================
+            # 3. Nginx + Redis
+            # ========================
+            export NAMESPACE=${{ vars.NAMESPACE }}
+
+            ./server-setup/ngnix/install.sh
+            kubectl apply -f ./server-setup/ngnix/nginx-config.yaml
+
+            ./server-setup/redis/install.sh
+
+            # ========================
+            # 4. Cert Manager
+            # ========================
+            kubectl create secret generic cloudflare-api-token \
+              -n cert-manager \
+              --from-literal=api-token='${{ secrets.CLOUDFLARE_PAT_TOKEN }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+
+
+                
+            ./server-setup/cert-manager/install.sh
+            kubectl apply -f ./server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
+
+            # ========================
+            # 5. Postgres secret
+            # ========================
+            kubectl create secret generic yahyeapps-postgres-secret \
+              -n ${{ vars.NAMESPACE }} \
+              --from-literal=POSTGRES_USER='${{ secrets.PG_USER }}' \
+              --from-literal=POSTGRES_PASSWORD='${{ secrets.PG_PASSWORD }}' \
+              --from-literal=POSTGRES_DB='${{ secrets.PG_DB }}' \
+              --from-literal=POSTGRES_HOST='${{ secrets.PG_HOST }}' \
+              --from-literal=POSTGRES_PORT='${{ secrets.PG_PORT }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+            # ========================
+            # 6. Postgres + PgBouncer + Envoy
+            # ========================
+            kubectl create secret generic allowed-request-token \
+              -n ${{ vars.NAMESPACE }} \
+              --from-literal=allowed_request_token='${{ secrets.ALLOWED_REQUEST_TOKEN }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+            kubectl apply -f ./server-setup/postgres
+            kubectl apply -f ./server-setup/pg_bouncer
+            kubectl apply -f ./server-setup/proxy-envoy
+
+            echo "✅ Server setup completed successfully"
+
+            # ========================
+            # 6. self hosted runner 
+            # ========================
+            kubectl create secret generic github-runner-token \
+            -n ${{ vars.NAMESPACE }} \
+            --from-literal=RUNNER_TOKEN='${{ secrets.SELF_HOSTED_RUNNER_TOKEN }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+            kubectl apply -f ./server-setup/self-hosted-github-runners/deploment.yml
+
+          EOF

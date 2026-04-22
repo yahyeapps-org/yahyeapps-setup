@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-github-runner
+  namespace: git-runners
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-runner
+  template:
+    metadata:
+      labels:
+        app: github-runner
+    spec:
+      containers:
+        - name: runner
+          image: yahyeapps/github-self-hosed-runner:v1
+          env:
+            - name: REPO_URL
+              value: "https://github.com/scorpion365000/auth-service-for-yahyeapps"
+            - name: RUNNER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-runner-token
+                  key: RUNNER_TOKEN
+            - name: RUNNER_NAME
+              value: "k3s-runner-1"
+            - name: RUNNER_LABELS
+              value: "billing-yahyeapps"
+          volumeMounts:
+            - name: kubeconfig
+              mountPath: /home/runner/.kube
+              readOnly: true
+      volumes:
+        - name: kubeconfig
+          hostPath:
+            path: /etc/rancher/k3s/k3s.yaml
+            type: File
+      restartPolicy: Always

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: yahyeapps
+data:
+  init-db.sql: |
+    DO $$ 
+    BEGIN
+        IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'template1') THEN
+            CREATE DATABASE template1;
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'postgres') THEN
+            CREATE DATABASE postgres;
+        END IF;
+    END $$;

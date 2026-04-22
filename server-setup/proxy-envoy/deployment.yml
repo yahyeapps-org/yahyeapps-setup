@@ -1,0 +1,37 @@
+# ========================
+# Envoy Deployment
+# ========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy
+  namespace: yahyeapps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy
+  template:
+    metadata:
+      labels:
+        app: envoy
+    spec:
+      containers:
+        - name: envoy
+          image: envoyproxy/envoy:v1.26.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ALLOWED_REQUEST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: allowed-request-token
+                  key: allowed_request_token
+          volumeMounts:
+            - name: envoy-config
+              mountPath: /etc/envoy
+              readOnly: true
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config

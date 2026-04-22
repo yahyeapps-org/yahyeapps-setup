@@ -1,0 +1,26 @@
+name: backup to main repo
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write # Allow the action to write to the repository
+  packages: read # Allow access to packages if needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 # Maximum running time for this job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create backup
+        uses: scorpion365000/my-github-actions/.github/actions/create-backup@main
+        with:
+          app_name: ${{ vars.APP_NAME }}
+          PAT_TOKEN_FOR_YAHYEAPPS2022: ${{ secrets.PAT_TOKEN_FOR_YAHYEAPPS2022 }}

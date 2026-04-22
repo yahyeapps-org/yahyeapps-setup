@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-ingress-nginx-controller
+  namespace: yahyeapps
+data:
+  # 🔹 Performance tuning
+  keepalive_timeout: "65"
+  client-max-body-size: "10m"
+  worker-connections: "100000"
+  worker-processes: "auto"
+  http2-max-concurrent-streams: "65535"
+  large-client-header-buffers: "8 64k"
+  proxy-buffers: "8 4k"  # Optimize proxy buffer usage
+  proxy-buffer-size: "4k"
+  # 🔹 WebSockets & Streaming optimizations
+  enable-websockets: "true"
+  proxy-buffering: "off"
+  proxy-read-timeout: "3600"
+  proxy-send-timeout: "3600"
+  proxy-connect-timeout: "3600"
+  tcp-keepalive-time: "300"
+
+  # 🔹 File descriptor & process limits
+  worker-rlimit-nofile: "100000"  # Keep it within system limits
+  worker-rlimit-nproc: "100000"
+ 
+  # 🔹 Headers & request handling
+  allow-snippet-annotations: "true"
+  enable-annotation-validation: "false"
+
+  # 🔹 Enable Custom Lua Code in Annotations
+  use-forwarded-headers: "true"

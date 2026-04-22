@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: yahyeapps-pg-bouncer-service
+  namespace: yahyeapps
+spec:
+  selector:
+    app: yahyeapps-pg-bouncer-service
+  ports:
+    - protocol: TCP
+      port: 6432 # clients connect here
+      targetPort: 6432 # forward to PgBouncer container port

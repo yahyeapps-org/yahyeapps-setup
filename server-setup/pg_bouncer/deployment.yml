@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yahyeapps-pg-bouncer
+  namespace: yahyeapps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yahyeapps-pg-bouncer
+  template:
+    metadata:
+      labels:
+        app: yahyeapps-pg-bouncer
+    spec:
+      containers:
+        - name: pgbouncer
+          image: pgbouncer/pgbouncer:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 6432
+
+          env:
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db_details
+                  key: pg_user
+
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db_details
+                  key: pg_password
+
+            - name: PG_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db_details
+                  key: pg_host
+
+            - name: PG_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: db_details
+                  key: pg_port
+
+            - name: MAX_CLIENT_CONN
+              value: "2000"
+            - name: DEFAULT_POOL_SIZE
+              value: "70"
+            - name: RESERVE_POOL_SIZE
+              value: "10"
+            - name: POOL_MODE
+              value: "transaction"
+
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              export DATABASES="*=host=$PG_HOST port=$PG_PORT user=$PG_USER password=$PG_PASSWORD"
+              exec /entrypoint.sh pgbouncer
