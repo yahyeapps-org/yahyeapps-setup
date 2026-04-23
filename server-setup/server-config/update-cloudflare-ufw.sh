@@ -17,4 +17,4 @@ for ip in $(curl -s https://www.cloudflare.com/ips-v6); do
 done
 
 # Enable UFW
-sudo ufw enable
+sudo ufw --force enable
