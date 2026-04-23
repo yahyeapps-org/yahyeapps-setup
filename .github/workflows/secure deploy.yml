@@ -119,7 +119,8 @@ jobs:
             chown ${{vars.SSH_USER}}:${{vars.SSH_USER}} /etc/rancher/k3s/k3s.yaml
 
             echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
-            source ~/.bashrc
+            export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+            
             # ========================
             # 3. Nginx + Redis
             # ========================
