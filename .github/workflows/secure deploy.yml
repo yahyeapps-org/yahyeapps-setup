@@ -87,7 +87,7 @@ jobs:
             set -euo pipefail
             
             #skip this if server already configured .  
-            if [ -f /home/.server-ready ]; then
+            if [ -f /home/${{vars.SSH_USER}}/.server-ready ]; then
               echo "Server already configured"
               exit 0
             fi
@@ -178,7 +178,6 @@ jobs:
 
 
             # clear sudo password cache
-            echo "$MYSUDOPASS" | sudo -S -v
-            echo "ready" > /home/.server-ready
+            echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
             sudo -k 
           EOF
