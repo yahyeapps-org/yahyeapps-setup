@@ -1,13 +1,12 @@
 #!/bin/bash
  
-
- echo "$MYSUDOPASS" | sudo -S -v
+echo "$MYSUDOPASS" | sudo -S -v
 
 while true; do
-  sudo -n true
+  echo "$MYSUDOPASS" | sudo -S -v
   sleep 60
-  kill -0 "$$" || exit
-done 2>/dev/null &
+done &
+
 
 echo "soodhoow yahye" | sudo tee /etc/motd
 
@@ -16,7 +15,7 @@ sudo apt-get update -y
 
 # install ufw 
 sudo apt install ufw -y
-sudo cp update-cloudflare-ufw.sh /usr/local/bin/ 
+sudo cp ./server-setup/server-config/update-cloudflare-ufw.sh /usr/local/bin/ 
 sudo chmod +x /usr/local/bin/update-cloudflare-ufw.sh
 echo "0 0 * * * /usr/local/bin/update-cloudflare-ufw.sh >/dev/null 2>&1" | sudo crontab -u root -
 
