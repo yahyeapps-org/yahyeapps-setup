@@ -1,6 +1,3 @@
-#!/bin/bash
-
-echo "$MYSUDOPASS" | sudo -S bash -c '
 
 set -euo pipefail
 
@@ -14,7 +11,7 @@ chmod +x /usr/local/bin/update-cloudflare-ufw.sh
 
 echo "0 0 * * * /usr/local/bin/update-cloudflare-ufw.sh >/dev/null 2>&1" | crontab -
 
-echo 'export PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH' >> ~/.bashrc 
+echo "export PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH" >> ~/.bashrc 
 source ~/.bashrc
 bash /usr/local/bin/update-cloudflare-ufw.sh
 
@@ -23,10 +20,6 @@ bash /usr/local/bin/update-cloudflare-ufw.sh
 # ======================
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
 
-chmod 644 /etc/rancher/k3s/k3s.yaml
-chown yahyeapps:yahyeapps /etc/rancher/k3s/k3s.yaml
-
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 # ======================
 # sysctl tuning
@@ -69,4 +62,3 @@ systemctl daemon-reexec
 
 echo "✅ Server setup completed"
 exit
-'
