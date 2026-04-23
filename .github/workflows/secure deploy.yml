@@ -124,12 +124,37 @@ jobs:
             # ========================
             # 3. Nginx + Redis
             # ========================
-            export NAMESPACE=${{ vars.NAMESPACE }}
+                  
+            helm repo add bitnami https://charts.bitnami.com/bitnami
+            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+            helm repo update
 
-            /tmp/server-setup/ngnix/install.sh
+            helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx \
+              --namespace ${{ vars.NAMESPACE }} \
+              --set controller.allowSnippetAnnotations=true \
+              --set controller.admissionWebhooks.enabled=false \
+              --set controller.image.pullPolicy=IfNotPresent
+            
             kubectl apply -f /tmp/server-setup/ngnix/nginx-config.yaml
 
-            /tmp/server-setup/redis/install.sh
+
+           #redis 
+
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm install redis bitnami/redis \
+            --namespace ${{ vars.NAMESPACE }} --create-namespace \
+            --set image.tag=sha256-8beb49786cd278b0e0e2494aff147e3a1a84d354fca94b4a27b049f7d951069d \
+            --set auth.enabled=false \
+            --set master.resources.requests.cpu="100m" \
+            --set master.resources.requests.memory="80Mi" \
+            --set master.resources.limits.cpu="100m" \
+            --set master.resources.limits.memory="80Mi" \
+            --set replica.resources.requests.cpu="100m" \
+            --set replica.resources.requests.memory="80Mi" \
+            --set replica.resources.limits.cpu="100m" \
+            --set replica.resources.limits.memory="80Mi"
+
+
 
             # ========================
             # 4. Cert Manager
@@ -139,10 +164,13 @@ jobs:
               --from-literal=api-token='${{ secrets.CLOUDFLARE_PAT_TOKEN }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
+            helm repo add jetstack https://charts.jetstack.io
+            helm repo update
 
+            helm install cert-manager jetstack/cert-manager \
+              --namespace cert-manager --create-namespace \
+              --set crds.enabled=true
 
-                
-            /tmp/server-setup/cert-manager/install.sh
             kubectl apply -f /tmp/server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
 
             # ========================
