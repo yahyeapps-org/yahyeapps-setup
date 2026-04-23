@@ -14,6 +14,8 @@ chmod +x /usr/local/bin/update-cloudflare-ufw.sh
 
 echo "0 0 * * * /usr/local/bin/update-cloudflare-ufw.sh >/dev/null 2>&1" | crontab -
 
+echo 'export PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH' >> ~/.bashrc 
+
 bash /usr/local/bin/update-cloudflare-ufw.sh
 
 # ======================
