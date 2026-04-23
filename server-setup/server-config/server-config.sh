@@ -19,10 +19,10 @@ bash /usr/local/bin/update-cloudflare-ufw.sh
 # ======================
 # k3s install
 # ======================
-#curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
 
-#chmod 644 /etc/rancher/k3s/k3s.yaml
-#chown yahyeapps:yahyeapps /etc/rancher/k3s/k3s.yaml
+chmod 644 /etc/rancher/k3s/k3s.yaml
+chown yahyeapps:yahyeapps /etc/rancher/k3s/k3s.yaml
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
