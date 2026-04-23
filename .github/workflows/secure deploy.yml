@@ -92,7 +92,7 @@ jobs:
               exit 0
             fi
 
-
+            echo 'export PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH' >> ~/.bashrc 
 
             cd /tmp 
             
