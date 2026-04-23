@@ -59,7 +59,7 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_KEY_WITH_NO_PASSPHRASE }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST_IP }} >> ~/.ssh/known_hosts
 
@@ -85,8 +85,17 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} <<EOF
             set -euo pipefail
-            cd /home/${{ vars.SSH_USER }}
+            
+            #skip this if server already configured .  
+            if [ -f /home/.server-ready ]; then
+              echo "Server already configured"
+              exit 0
+            fi
 
+            cd /home/${{ vars.SSH_USER }}
+            
+            # cashe sudo password 
+            export MYSUDOPASS="${{secrets.SUDO_PASSWORD}}"
             echo "🚀 Starting server setup..."
 
             # ========================
@@ -164,4 +173,9 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
             kubectl apply -f ./server-setup/self-hosted-github-runners/deploment.yml
 
+
+            # clear sudo password cache
+            echo "$MYSUDOPASS" | sudo -S -v
+            echo "ready" > /home/.server-ready
+            sudo -k 
           EOF

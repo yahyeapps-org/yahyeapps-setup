@@ -1,5 +1,14 @@
 #!/bin/bash
  
+
+ echo "$MYSUDOPASS" | sudo -S -v
+
+while true; do
+  sudo -n true
+  sleep 60
+  kill -0 "$$" || exit
+done 2>/dev/null &
+
 echo "soodhoow yahye" | sudo tee /etc/motd
 
 sudo apt update -y 
@@ -11,6 +20,8 @@ sudo cp update-cloudflare-ufw.sh /usr/local/bin/
 sudo chmod +x /usr/local/bin/update-cloudflare-ufw.sh
 echo "0 0 * * * /usr/local/bin/update-cloudflare-ufw.sh >/dev/null 2>&1" | sudo crontab -u root -
 
+
+bash /usr/local/bin/update-cloudflare-ufw.sh 
 
 # install cron
 sudo apt install cron -y
