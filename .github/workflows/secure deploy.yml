@@ -93,7 +93,7 @@ jobs:
             fi
 
             cd /home/${{ vars.SSH_USER }}
-            
+            export MYUSER=${{vars.SSH_USER}}
             # cashe sudo password 
             export MYSUDOPASS="${{secrets.SUDO_PASSWORD}}"
             echo "🚀 Starting server setup..."
