@@ -9,7 +9,7 @@ echo "soodhoow yahye" | tee /etc/motd
 apt update -y
 apt install -y ufw cron git curl
 
-cp /home/server-setup/server-config/update-cloudflare-ufw.sh /usr/local/bin/
+cp /tmp/server-setup/server-config/update-cloudflare-ufw.sh /usr/local/bin/
 chmod +x /usr/local/bin/update-cloudflare-ufw.sh
 
 echo "0 0 * * * /usr/local/bin/update-cloudflare-ufw.sh >/dev/null 2>&1" | crontab -
