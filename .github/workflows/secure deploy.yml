@@ -83,7 +83,7 @@ jobs:
 
       - name: Run full server setup on remote machine
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} <<EOF
+          ssh -i ~/.ssh/id_rsa ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} <<'EOF'
             set -euo pipefail
             
             #skip this if server already configured .  
@@ -184,3 +184,5 @@ jobs:
             echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
 
             EOF
+
+
