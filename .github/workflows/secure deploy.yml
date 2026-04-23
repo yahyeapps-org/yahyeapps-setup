@@ -79,7 +79,7 @@ jobs:
         run: |
           scp -o BatchMode=yes -o ConnectTimeout=10 \
           -i ~/.ssh/id_rsa -r ./server-setup \
-          ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }}:/home/
+          ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }}:/home/${{ vars.SSH_USER }}
 
       - name: Run full server setup on remote machine
         run: |
@@ -92,7 +92,12 @@ jobs:
               exit 0
             fi
 
+
+
+            cd /home/${{ vars.SSH_USER }}
+            mv server-setup /home
             cd /home
+            
             export MYUSER=${{vars.SSH_USER}}
             # cashe sudo password 
             export MYSUDOPASS="${{secrets.SUDO_PASSWORD}}"
