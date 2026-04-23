@@ -192,10 +192,10 @@ jobs:
             # ========================
             export NAMESPACE=${{ vars.NAMESPACE }}
 
-            ./server-setup/ngnix/install.sh
-            kubectl apply -f ./server-setup/ngnix/nginx-config.yaml
+            /tmp/server-setup/ngnix/install.sh
+            kubectl apply -f /tmp/server-setup/ngnix/nginx-config.yaml
 
-            ./server-setup/redis/install.sh
+            /tmp/server-setup/redis/install.sh
 
             # ========================
             # 4. Cert Manager
@@ -208,8 +208,8 @@ jobs:
 
 
                 
-            ./server-setup/cert-manager/install.sh
-            kubectl apply -f ./server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
+            /tmp/server-setup/cert-manager/install.sh
+            kubectl apply -f /tmp/server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
 
             # ========================
             # 5. Postgres secret
@@ -231,9 +231,9 @@ jobs:
               --from-literal=allowed_request_token='${{ secrets.ALLOWED_REQUEST_TOKEN }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
-            kubectl apply -f ./server-setup/postgres
-            kubectl apply -f ./server-setup/pg_bouncer
-            kubectl apply -f ./server-setup/proxy-envoy
+            kubectl apply -f /tmp/server-setup/postgres
+            kubectl apply -f /tmp/server-setup/pg_bouncer
+            kubectl apply -f /tmp/server-setup/proxy-envoy
 
             echo "✅ Server setup completed successfully"
 
@@ -244,7 +244,7 @@ jobs:
             -n ${{ vars.NAMESPACE }} \
             --from-literal=RUNNER_TOKEN='${{ secrets.SELF_HOSTED_RUNNER_TOKEN }}' \
             --dry-run=client -o yaml | kubectl apply -f -
-            kubectl apply -f ./server-setup/self-hosted-github-runners/deploment.yml
+            kubectl apply -f /tmp/server-setup/self-hosted-github-runners/deploment.yml
 
 
             # clear sudo password cache
