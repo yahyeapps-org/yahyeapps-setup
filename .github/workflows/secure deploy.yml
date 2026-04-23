@@ -185,7 +185,8 @@ jobs:
             exit
             '
 
-
+            echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> ~/.bashrc   
+            source ~/.bashrc
             # ========================
             # 3. Nginx + Redis
             # ========================
@@ -248,5 +249,5 @@ jobs:
 
             # clear sudo password cache
             echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
-            echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> ~/.bashrc   
-          EOF
+
+            EOF
