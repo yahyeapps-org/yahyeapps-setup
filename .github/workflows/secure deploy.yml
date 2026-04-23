@@ -184,7 +184,7 @@ jobs:
             exit
             '
 
-            echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> ~/.bashrc   
+            echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
             source ~/.bashrc
             # ========================
             # 3. Nginx + Redis
