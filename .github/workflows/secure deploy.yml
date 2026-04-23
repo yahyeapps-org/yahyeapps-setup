@@ -72,7 +72,7 @@ jobs:
               "echo Connected successfully"
           then
             echo "❌ SSH connection failed, is this user created in in server (github-actions)  "
-            exit 1
+            exit 1  
           fi
 
       - name: Copy files to server
@@ -120,7 +120,7 @@ jobs:
 
             echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
             export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-            
+
             # ========================
             # 3. Nginx + Redis
             # ========================
