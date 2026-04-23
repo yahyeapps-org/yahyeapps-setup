@@ -6,8 +6,8 @@ set -euo pipefail
 
 echo "soodhoow yahye" | tee /etc/motd
 
-apt update -y
-apt install -y ufw cron git curl
+apt-get update -y
+apt-get install -y ufw cron git curl
 
 cp /tmp/server-setup/server-config/update-cloudflare-ufw.sh /usr/local/bin/
 chmod +x /usr/local/bin/update-cloudflare-ufw.sh

@@ -179,5 +179,5 @@ jobs:
 
             # clear sudo password cache
             echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
-            sudo -k 
+
           EOF
