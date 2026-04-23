@@ -184,5 +184,3 @@ jobs:
             echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
 
             EOF
-
-

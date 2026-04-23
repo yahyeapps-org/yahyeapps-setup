@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #add ufw to path 
-export PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH' 
+export 'PATH=/usr/sbin:/sbin:/usr/bin:/bin:$PATH' 
 # Flush old Cloudflare rules
   ufw --force reset
 
