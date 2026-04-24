@@ -3,39 +3,73 @@ kind: StatefulSet
 metadata:
   name: postgres-yahyeapps
   namespace: yahyeapps
+
 spec:
   serviceName: "postgres-yahyeapps"
   replicas: 1
+
   selector:
     matchLabels:
       app: postgres-yahyeapps
+
   template:
     metadata:
       labels:
         app: postgres-yahyeapps
+
     spec:
       containers:
         - name: postgres-yahyeapps
           image: postgres:17
+
           env:
             - name: TZ
               value: "Africa/Mogadishu"
+
           envFrom:
             - secretRef:
                 name: yahyeapps-postgres-secret
+
           ports:
             - containerPort: 5432
+
+          # ✅ RESOURCE LIMITS (IMPORTANT)
+          resources:
+            requests:
+              memory: "3Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+
+          # ✅ Mount config
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: postgres-data
-            - mountPath: /docker-entrypoint-initdb.d/
-              name: postgres-init-script-volume
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+
+            - name: postgres-init-script-volume
+              mountPath: /docker-entrypoint-initdb.d/
               readOnly: true
+
+            - name: postgres-config
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+
+          # ✅ Force Postgres to use custom config
+          command:
+            - "postgres"
+            - "-c"
+            - "config_file=/etc/postgresql/postgresql.conf"
 
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
             claimName: postgress-pvc-yahyeapps
+
         - name: postgres-init-script-volume
           configMap:
             name: postgres-init-script
+
+        - name: postgres-config
+          configMap:
+            name: postgres-custom-config

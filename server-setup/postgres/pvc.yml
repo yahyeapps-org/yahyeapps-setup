@@ -5,14 +5,13 @@ metadata:
   namespace: yahyeapps
 spec:
   capacity:
-    storage: 2Gi # Make sure this matches the PVC's request
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: standard-pv-yahyeapps # Ensure this matches the PVC's storageClassName
+  storageClassName: standard-pv-yahyeapps
   hostPath:
-    path: /db/yahyeapps-db # Ensure this path exists on the node
-
+    path: /db/yahyeapps-db
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -22,7 +21,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: standard-pv-yahyeapps
   resources:
     requests:
-      storage: 6Gi # Same as the PV's capacityd
-  storageClassName: standard-pv-yahyeapps
+      storage: 10Gi

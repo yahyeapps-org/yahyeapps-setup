@@ -58,6 +58,11 @@ DefaultLimitNPROC=100000
 EOF
 done
 
+
+# kubnertes storage 
+ mkdir -p /db/yahyeapps-db
+ chmod 777 /db/yahyeapps-db
+
 systemctl daemon-reexec
 
 echo "✅ Server setup completed"

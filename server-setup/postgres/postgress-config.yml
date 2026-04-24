@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-custom-config
+  namespace: yahyeapps
+
+data:
+  postgresql.conf: |
+
+    # -----------------------------
+    # PostgreSQL configuration file
+    # -----------------------------
+
+    #------------------------------------------------------------------------------
+    # CONNECTIONS AND AUTHENTICATION
+    #------------------------------------------------------------------------------
+
+    listen_addresses = '*'
+    max_connections = 100
+
+    #------------------------------------------------------------------------------
+    # RESOURCE USAGE (except WAL)
+    #------------------------------------------------------------------------------
+
+    # Memory
+    shared_buffers = 2GB
+    dynamic_shared_memory_type = posix
+
+    # Your performance tuning
+    effective_cache_size = 6GB
+    work_mem = 32MB
+    maintenance_work_mem = 256MB
+
+    #------------------------------------------------------------------------------
+    # WRITE-AHEAD LOG
+    #------------------------------------------------------------------------------
+
+    fsync = on
+    synchronous_commit = on
+    wal_buffers = 16MB
+
+    max_wal_size = 1GB
+    min_wal_size = 80MB
+
+    #------------------------------------------------------------------------------
+    # QUERY TUNING
+    #------------------------------------------------------------------------------
+
+    effective_cache_size = 6GB
+
+    #------------------------------------------------------------------------------
+    # REPLICATION / EXTENSIONS
+    #------------------------------------------------------------------------------
+
+    shared_preload_libraries = 'pg_prewarm'
+
+    #------------------------------------------------------------------------------
+    # CUSTOM EXTENSION SETTINGS
+    #------------------------------------------------------------------------------
+
+    pg_prewarm.autoprewarm = on
+
+    #------------------------------------------------------------------------------
+    # REPORTING AND LOGGING
+    #------------------------------------------------------------------------------
+
+    log_timezone = 'Africa/Mogadishu'
+
+    #------------------------------------------------------------------------------
+    # CLIENT CONNECTION DEFAULTS
+    #------------------------------------------------------------------------------
+
+    datestyle = 'iso, mdy'
+    timezone = 'Africa/Mogadishu'
+
+    lc_messages = 'en_US.utf8'
+    lc_monetary = 'en_US.utf8'
+    lc_numeric = 'en_US.utf8'
+    lc_time = 'en_US.utf8'
+
+    default_text_search_config = 'pg_catalog.english'
+
+    #------------------------------------------------------------------------------
+    # OTHER DEFAULTS (kept minimal)
+    #------------------------------------------------------------------------------
+
+    allow_alter_system = on
