@@ -94,7 +94,7 @@ jobs:
 
 
             cd /tmp 
-            rm tmp/server-setup  -r
+            rm tmp/server-setup  -rf
 
             echo "🚀 Starting server setup..."
 
