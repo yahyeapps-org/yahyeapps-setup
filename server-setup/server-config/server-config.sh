@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+
+USERNAME="$1"
+ 
+
 
 set -euo pipefail
 
@@ -20,6 +25,8 @@ bash /usr/local/bin/update-cloudflare-ufw.sh
 # ======================
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
 
+chmod 644 /etc/rancher/k3s/k3s.yaml
+chown $USERNAME:$USERNAME /etc/rancher/k3s/k3s.yaml
 
 # ======================
 # sysctl tuning

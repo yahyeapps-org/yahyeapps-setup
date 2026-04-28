@@ -94,7 +94,7 @@ jobs:
 
 
             cd /tmp 
-            
+            rm tmp/server-setup  -r
 
             echo "🚀 Starting server setup..."
 
@@ -113,10 +113,8 @@ jobs:
             # ========================
 
            
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S bash /tmp/server-setup/server-config/server-config.sh
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S bash /tmp/server-setup/server-config/server-config.sh  "${{ vars.SSH_USER }}"
 
-            chmod 644 /etc/rancher/k3s/k3s.yaml
-            chown ${{vars.SSH_USER}}:${{vars.SSH_USER}} /etc/rancher/k3s/k3s.yaml
 
             echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
             export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
