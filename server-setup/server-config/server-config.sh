@@ -25,6 +25,21 @@ bash /usr/local/bin/update-cloudflare-ufw.sh
 # ======================
 curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
 
+# Wait up to 60 seconds (30 tries * 2 seconds)
+MAX_RETRIES=60
+COUNT=0
+
+while [ ! -f /etc/rancher/k3s/k3s.yaml ]; do
+  if [ $COUNT -eq $MAX_RETRIES ]; then
+    echo "❌ K3s config file was never created. Check K3s logs!"
+    exit 1
+  fi
+  echo "Waiting for config file... ($COUNT/$MAX_RETRIES)"
+  COUNT=$((COUNT + 1))
+  sleep 2
+done
+
+
 chmod 644 /etc/rancher/k3s/k3s.yaml
 chown $USERNAME:$USERNAME /etc/rancher/k3s/k3s.yaml
 

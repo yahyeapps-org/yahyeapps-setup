@@ -94,7 +94,7 @@ jobs:
 
 
             cd /tmp 
-            rm tmp/server-setup  -rf
+            
 
             echo "🚀 Starting server setup..."
 
@@ -120,7 +120,9 @@ jobs:
             export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
             # create yahyeapps namespace 
-            kubectl create namespace yahyeapps
+            
+            kubectl create namespace ${{ vars.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
 
             # ========================
             # 3. Nginx + Redis
@@ -210,7 +212,7 @@ jobs:
             kubectl apply -f /tmp/server-setup/self-hosted-github-runners/deploment.yml
 
 
-            # clear sudo password cache
+            rm /tmp/server-setup  -rf
             echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
 
             EOF
