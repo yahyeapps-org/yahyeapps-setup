@@ -3,15 +3,19 @@ kind: Deployment
 metadata:
   name: yahyeapps-pg-bouncer
   namespace: yahyeapps
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: yahyeapps-pg-bouncer
+
   template:
     metadata:
       labels:
         app: yahyeapps-pg-bouncer
+
     spec:
       containers:
         - name: pgbouncer
@@ -20,6 +24,14 @@ spec:
 
           ports:
             - containerPort: 6432
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 
           env:
             - name: PG_USER

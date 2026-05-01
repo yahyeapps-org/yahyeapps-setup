@@ -119,6 +119,9 @@ jobs:
             echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
             export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
+            # create yahyeapps namespace 
+            kubectl create namespace yahyeapps
+
             # ========================
             # 3. Nginx + Redis
             # ========================
