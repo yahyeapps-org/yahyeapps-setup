@@ -119,9 +119,11 @@ jobs:
             echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
             export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-            # create yahyeapps namespace 
+            # create  namespaces 
             
             kubectl create namespace ${{ vars.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+            
+            kubectl create namespace  cert-manager --dry-run=client -o yaml | kubectl apply -f -
 
 
             # ========================
