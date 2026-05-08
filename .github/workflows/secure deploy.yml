@@ -83,104 +83,111 @@ jobs:
 
       - name: Run full server setup on remote machine
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} <<'EOF'
+          ssh -i ~/.ssh/id_rsa \
+            ${{ vars.SSH_USER }}@${{ secrets.SSH_HOST_IP }} <<'EOF'
+
             set -euo pipefail
-            
-            #skip this if server already configured .  
-            if [ -f /home/${{vars.SSH_USER}}/.server-ready ]; then
-              echo "Server already configured"
+
+            if [ -f /home/${{ vars.SSH_USER }}/.server-ready ]; then
+              echo "✅ Server already configured"
               exit 0
             fi
 
-
-            cd /tmp 
-            
+            cd /tmp
 
             echo "🚀 Starting server setup..."
 
-            # ========================
-            # 1. Make scripts executable
-            # ========================
+            # Make shell scripts executable
             find server-setup -type f -name "*.sh" -exec chmod +x {} +
 
-
-            # chage namespace in yaml 
+            # Replace namespaces
             find server-setup \( -name "*.yml" -o -name "*.yaml" \) \
-             -exec sed -i "s|^[[:space:]]*namespace: .*|  namespace: ${{ vars.NAMESPACE }}|g" {} +
+              -exec sed -i "s|^[[:space:]]*namespace: .*|  namespace: ${{ vars.NAMESPACE }}|g" {} +
 
-            # ========================
-            # 2. Server config
-            # ========================
+            # ====================================
+            # Server Config
+            # ====================================
 
-           
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S bash /tmp/server-setup/server-config/server-config.sh  "${{ vars.SSH_USER }}"
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S bash \
+              /tmp/server-setup/server-config/server-config.sh \
+              "${{ vars.SSH_USER }}"
 
-
-            echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc   
             export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-            # create  namespaces 
-            
-            kubectl create namespace ${{ vars.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-            
-            kubectl create namespace  cert-manager --dry-run=client -o yaml | kubectl apply -f -
+            echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
 
+            # ====================================
+            # Namespaces
+            # ====================================
 
-            # ========================
-            # 3. Nginx + Redis
-            # ========================
-                  
+            kubectl create namespace ${{ vars.NAMESPACE }} \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+            kubectl create namespace cert-manager \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+            # ====================================
+            # Helm repos
+            # ====================================
+
             helm repo add bitnami https://charts.bitnami.com/bitnami
             helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+            helm repo add jetstack https://charts.jetstack.io
+
             helm repo update
 
-            helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx \
+            # ====================================
+            # NGINX Ingress
+            # ====================================
+
+            helm upgrade --install nginx-ingress \
+              ingress-nginx/ingress-nginx \
               --namespace ${{ vars.NAMESPACE }} \
               --set controller.allowSnippetAnnotations=true \
               --set controller.admissionWebhooks.enabled=false \
               --set controller.image.pullPolicy=IfNotPresent
-            
+
             kubectl apply -f /tmp/server-setup/ngnix/nginx-config.yaml
 
+            # ====================================
+            # Redis
+            # ====================================
 
-           #redis 
+            helm upgrade --install redis bitnami/redis \
+              --namespace ${{ vars.NAMESPACE }} \
+              --create-namespace \
+              --set auth.enabled=false \
+              --set master.resources.requests.cpu="100m" \
+              --set master.resources.requests.memory="80Mi" \
+              --set master.resources.limits.cpu="100m" \
+              --set master.resources.limits.memory="80Mi" \
+              --set replica.resources.requests.cpu="100m" \
+              --set replica.resources.requests.memory="80Mi" \
+              --set replica.resources.limits.cpu="100m" \
+              --set replica.resources.limits.memory="80Mi"
 
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm install redis bitnami/redis \
-            --namespace ${{ vars.NAMESPACE }} --create-namespace \
-            --set image.tag=sha256-8beb49786cd278b0e0e2494aff147e3a1a84d354fca94b4a27b049f7d951069d \
-            --set auth.enabled=false \
-            --set master.resources.requests.cpu="100m" \
-            --set master.resources.requests.memory="80Mi" \
-            --set master.resources.limits.cpu="100m" \
-            --set master.resources.limits.memory="80Mi" \
-            --set replica.resources.requests.cpu="100m" \
-            --set replica.resources.requests.memory="80Mi" \
-            --set replica.resources.limits.cpu="100m" \
-            --set replica.resources.limits.memory="80Mi"
+            # ====================================
+            # Cert Manager
+            # ====================================
 
-
-
-            # ========================
-            # 4. Cert Manager
-            # ========================
             kubectl create secret generic cloudflare-api-token \
               -n cert-manager \
               --from-literal=api-token='${{ secrets.CLOUDFLARE_PAT_TOKEN }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
-            helm repo add jetstack https://charts.jetstack.io
-            helm repo update
-
-            helm install cert-manager jetstack/cert-manager \
-              --namespace cert-manager --create-namespace \
+            helm upgrade --install cert-manager \
+              jetstack/cert-manager \
+              --namespace cert-manager \
+              --create-namespace \
               --set crds.enabled=true
 
-            kubectl apply -f /tmp/server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
+            kubectl apply -f \
+              /tmp/server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
 
-            # ========================
-            # 5. Postgres secret
-            # ========================
+            # ====================================
+            # Postgres Secret
+            # ====================================
+
             kubectl create secret generic yahyeapps-postgres-secret \
               -n ${{ vars.NAMESPACE }} \
               --from-literal=POSTGRES_USER='${{ secrets.PG_USER }}' \
@@ -190,31 +197,43 @@ jobs:
               --from-literal=POSTGRES_PORT='${{ secrets.PG_PORT }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
-            # ========================
-            # 6. Postgres + PgBouncer + Envoy
-            # ========================
+            # ====================================
+            # Allowed Request Token
+            # ====================================
+
             kubectl create secret generic allowed-request-token \
               -n ${{ vars.NAMESPACE }} \
               --from-literal=allowed_request_token='${{ secrets.ALLOWED_REQUEST_TOKEN }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
+            # ====================================
+            # Deploy Services
+            # ====================================
+
             kubectl apply -f /tmp/server-setup/postgres
             kubectl apply -f /tmp/server-setup/pg_bouncer
             kubectl apply -f /tmp/server-setup/proxy-envoy
 
+            # ====================================
+            # GitHub Self Hosted Runner
+            # ====================================
+
+            kubectl create secret generic github-runner-token \
+              -n ${{ vars.NAMESPACE }} \
+              --from-literal=RUNNER_TOKEN='${{ secrets.SELF_HOSTED_RUNNER_TOKEN }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
+
+            kubectl apply -f \
+              /tmp/server-setup/self-hosted-github-runners/deploment.yml
+
+            # ====================================
+            # Cleanup
+            # ====================================
+
+            rm -rf /tmp/server-setup
+
+            echo "ready" > /home/${{ vars.SSH_USER }}/.server-ready
+
             echo "✅ Server setup completed successfully"
 
-            # ========================
-            # 6. self hosted runner 
-            # ========================
-            kubectl create secret generic github-runner-token \
-            -n ${{ vars.NAMESPACE }} \
-            --from-literal=RUNNER_TOKEN='${{ secrets.SELF_HOSTED_RUNNER_TOKEN }}' \
-            --dry-run=client -o yaml | kubectl apply -f -
-            kubectl apply -f /tmp/server-setup/self-hosted-github-runners/deploment.yml
-
-
-            rm /tmp/server-setup  -rf
-            echo "ready" > /home/${{vars.SSH_USER}}/.server-ready
-
-            EOF
+          EOF
