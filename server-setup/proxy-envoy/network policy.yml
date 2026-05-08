@@ -2,17 +2,22 @@ apiVersion: projectcalico.org/v3
 kind: GlobalNetworkPolicy
 metadata:
   name: enforce-cluster-proxy
+
 spec:
-  # Select all pods except system namespaces
-  selector: all() && !namespace.matches("kube-system|cert-manager")
+  selector: projectcalico.org/namespace not in {
+    "kube-system",
+    "cert-manager"
+  }
+
   types:
     - Egress
+
   egress:
-    # Allow traffic to Envoy proxy only (replace IP/port as needed)
     - action: Allow
       destination:
+        namespaceSelector: kubernetes.io/metadata.name == "yahyeapps"
         selector: app == "envoy"
         ports:
           - 8080
-  # Default deny everything else
-  applyOnForwardedIPs: true
+
+  applyOnForwarded: true

@@ -23,8 +23,7 @@ bash /usr/local/bin/update-cloudflare-ufw.sh
 # ======================
 # k3s install
 # ======================
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
-
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik --flannel-backend=none --disable-network-policy" sh -
 # Wait up to 60 seconds (30 tries * 2 seconds)
 # Wait for kubeconfig file
 MAX_RETRIES=60
