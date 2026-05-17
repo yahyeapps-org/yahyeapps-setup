@@ -1,21 +1,22 @@
 apiVersion: projectcalico.org/v3
 kind: GlobalNetworkPolicy
+
 metadata:
   name: enforce-cluster-proxy
 
 spec:
-  selector: projectcalico.org/namespace not in {
-    "kube-system",
-    "cert-manager"
-  }
+  selector: all()
+
+  namespaceSelector: projectcalico.org/name not in {"kube-system", "cert-manager"}
 
   types:
     - Egress
 
   egress:
     - action: Allow
+      protocol: TCP
       destination:
-        namespaceSelector: kubernetes.io/metadata.name == "yahyeapps"
+        namespaceSelector: projectcalico.org/name == "yahyeapps"
         selector: app == "envoy"
         ports:
           - 8080
