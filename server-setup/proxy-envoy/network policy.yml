@@ -1,24 +1,52 @@
 apiVersion: crd.projectcalico.org/v1
 kind: GlobalNetworkPolicy
-
 metadata:
-  name: enforce-cluster-proxy
-
+  name: allow-cert-manager-internet
 spec:
-  selector: all()
-
-  namespaceSelector: projectcalico.org/name not in {"kube-system", "cert-manager"}
+  namespaceSelector: kubernetes.io/metadata.name == "cert-manager"
 
   types:
     - Egress
 
   egress:
     - action: Allow
-      protocol: TCP
       destination:
-        namespaceSelector: projectcalico.org/name == "yahyeapps"
-        selector: app == "envoy"
-        ports:
-          - 8080
+        nets:
+          - 0.0.0.0/0
 
-  applyOnForwarded: true
+---
+apiVersion: crd.projectcalico.org/v1
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-envoy-internet
+spec:
+  selector: app == "envoy"
+  namespaceSelector: kubernetes.io/metadata.name == "yahyeapps"
+
+  types:
+    - Egress
+
+  egress:
+    - action: Allow
+      destination:
+        nets:
+          - 0.0.0.0/0
+
+---
+apiVersion: crd.projectcalico.org/v1
+kind: GlobalNetworkPolicy
+metadata:
+  name: block-all-other-internet
+spec:
+  selector: all()
+
+  namespaceSelector: kubernetes.io/metadata.name not in {"cert-manager"}
+
+  types:
+    - Egress
+
+  egress:
+    - action: Deny
+      destination:
+        nets:
+          - 0.0.0.0/0
