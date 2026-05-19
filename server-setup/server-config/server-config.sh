@@ -99,10 +99,13 @@ EOF
 done
 
 
+sudo tee /etc/sysctl.d/99-custom.conf <<EOF
 net.core.netdev_max_backlog=65535
 net.core.rmem_max=16777216
 net.core.wmem_max=16777216
+EOF
 
+ 
 # kubnertes storage 
  mkdir -p /db/yahyeapps-db
  chmod 777 /db/yahyeapps-db
