@@ -152,11 +152,11 @@ jobs:
             # Refresh kubectl discovery cache
             kubectl api-resources >/dev/null
 
-            kubectl apply -f /tmp/server-setup/proxy-envoy/configmap.yml
-            kubectl apply -f /tmp/server-setup/proxy-envoy/deployment.yml
-            kubectl apply -f /tmp/server-setup/proxy-envoy/service.yml
+            kubectl apply -f /tmp/server-setup/nginx-proxy/configmap.yml
+            kubectl apply -f /tmp/server-setup/nginx-proxy/deployment.yml
+            kubectl apply -f /tmp/server-setup/nginx-proxy/service.yml
 
-            kubectl apply -f "/tmp/server-setup/proxy-envoy/network policy.yml"
+            kubectl apply -f "/tmp/server-setup/nginx-proxy/network policy.yml"
 
 
 
@@ -219,7 +219,7 @@ jobs:
               /tmp/server-setup/cert-manager/issuer-cluster-letsencrtypt.yml
 
             # ====================================
-            # Postgres Secret
+            # Postgres Secret  and bgbouncer 
             # ====================================
 
             kubectl create secret generic yahyeapps-postgres-secret \
@@ -231,6 +231,10 @@ jobs:
               --from-literal=POSTGRES_PORT='${{ secrets.PG_PORT }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
+            kubectl create secret generic pgbouncer-users \
+              -n yahyeapps \
+              --from-literal="userlist.txt=\"${{ secrets.PG_USER }}\" \"${{ secrets.PG_PASSWORD }}\"" \
+              --dry-run=client -o yaml | kubectl apply -f -
             # ====================================
             # Allowed Request Token
             # ====================================

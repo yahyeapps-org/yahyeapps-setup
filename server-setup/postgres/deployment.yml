@@ -18,6 +18,12 @@ spec:
         app: postgres-yahyeapps
 
     spec:
+      # 🔐 FIX: run as postgres non-root user
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+
       containers:
         - name: postgres-yahyeapps
           image: postgres:17
@@ -26,14 +32,27 @@ spec:
             - name: TZ
               value: "Africa/Mogadishu"
 
-          envFrom:
-            - secretRef:
-                name: yahyeapps-postgres-secret
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: yahyeapps-postgres-secret
+                  key: POSTGRES_USER
 
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: yahyeapps-postgres-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: yahyeapps-postgres-secret
+                  key: POSTGRES_DB
           ports:
             - containerPort: 5432
 
-          # ✅ RESOURCE LIMITS (IMPORTANT)
           resources:
             requests:
               memory: "3Gi"
@@ -42,7 +61,6 @@ spec:
               memory: "4Gi"
               cpu: "2"
 
-          # ✅ Mount config
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -55,7 +73,6 @@ spec:
               mountPath: /etc/postgresql/postgresql.conf
               subPath: postgresql.conf
 
-          # ✅ Force Postgres to use custom config
           command:
             - "postgres"
             - "-c"

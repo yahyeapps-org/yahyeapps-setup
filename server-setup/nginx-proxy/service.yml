@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-proxy
+  namespace: yahyeapps
+spec:
+  selector:
+    app: nginx-proxy
+  ports:
+    - port: 3128
+      targetPort: 3128

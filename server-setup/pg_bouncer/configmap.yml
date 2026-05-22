@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgbouncer-config
+  namespace: yahyeapps
+
+data:
+  pgbouncer.ini: |
+    [databases]
+    * = host=postgres-yahyeapps.yahyeapps.svc.cluster.local port=5432
+
+    [pgbouncer]
+    pool_mode = transaction
+    max_client_conn = 2000
+    default_pool_size = 70
+    reserve_pool_size = 10
+
+    listen_port = 6432
+    listen_addr = 0.0.0.0
+
+    auth_type = scram-sha-256 
+    auth_file = /etc/pgbouncer/userlist.txt
+
+    admin_users = postgres

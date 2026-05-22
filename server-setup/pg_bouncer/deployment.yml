@@ -20,11 +20,9 @@ spec:
       containers:
         - name: pgbouncer
           image: pgbouncer/pgbouncer:latest
-          imagePullPolicy: IfNotPresent
 
           ports:
             - containerPort: 6432
-
           resources:
             requests:
               cpu: "100m"
@@ -33,42 +31,22 @@ spec:
               cpu: "500m"
               memory: "512Mi"
 
-          env:
-            - name: PG_USER
-              valueFrom:
-                secretKeyRef:
-                  name: yahyeapps-postgres-secret
-                  key: POSTGRES_USER
+          volumeMounts:
+            - name: pgbouncer-config
+              mountPath: /etc/pgbouncer/pgbouncer.ini
+              subPath: pgbouncer.ini
 
-            - name: PG_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: yahyeapps-postgres-secret
-                  key: POSTGRES_PASSWORD
+            - name: pgbouncer-users
+              mountPath: /etc/pgbouncer/userlist.txt
+              subPath: userlist.txt
 
-            - name: PG_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: yahyeapps-postgres-secret
-                  key: POSTGRES_HOST
+          command: ["/usr/bin/pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
 
-            - name: PG_PORT
-              valueFrom:
-                secretKeyRef:
-                  name: yahyeapps-postgres-secret
-                  key: POSTGRES_PORT
+      volumes:
+        - name: pgbouncer-config
+          configMap:
+            name: pgbouncer-config
 
-            - name: MAX_CLIENT_CONN
-              value: "2000"
-            - name: DEFAULT_POOL_SIZE
-              value: "70"
-            - name: RESERVE_POOL_SIZE
-              value: "10"
-            - name: POOL_MODE
-              value: "transaction"
-
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              export DATABASES="*=host=$PG_HOST port=$PG_PORT user=$PG_USER password=$PG_PASSWORD"
-              exec /entrypoint.sh pgbouncer
+        - name: pgbouncer-users
+          secret:
+            secretName: pgbouncer-users

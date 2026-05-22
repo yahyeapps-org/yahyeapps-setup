@@ -107,9 +107,9 @@ EOF
 
  
 # kubnertes storage 
- mkdir -p /db/yahyeapps-db
- chmod 777 /db/yahyeapps-db
-
+mkdir -p /db/yahyeapps-db
+sudo chown -R 999:999 /db/yahyeapps-db
+sudo chmod -R 700 /db/yahyeapps-db
 systemctl daemon-reexec
 
 echo "✅ Server setup completed"
