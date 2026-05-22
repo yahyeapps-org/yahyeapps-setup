@@ -174,8 +174,8 @@ jobs:
             # NGINX Ingress
             # ====================================
 
-            helm upgrade --install nginx-ingress \
-            --namespace ingress-nginx \
+            helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx \
+              --namespace ingress-nginx \
               --create-namespace
 
             kubectl apply -f /tmp/server-setup/ngnix/nginx-config.yaml
