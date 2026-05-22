@@ -40,13 +40,31 @@ metadata:
 spec:
   selector: all()
 
-  namespaceSelector: kubernetes.io/metadata.name not in {"cert-manager"}
+  namespaceSelector: kubernetes.io/metadata.name not in {"cert-manager", "kube-system"}
 
   types:
     - Egress
 
   egress:
     - action: Deny
+      destination:
+        nets:
+          - 0.0.0.0/0
+---
+apiVersion: crd.projectcalico.org/v1
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-github-runner-internet
+spec:
+  selector: app == "github-runner"
+
+  namespaceSelector: kubernetes.io/metadata.name == "yahyeapps"
+
+  types:
+    - Egress
+
+  egress:
+    - action: Allow
       destination:
         nets:
           - 0.0.0.0/0
