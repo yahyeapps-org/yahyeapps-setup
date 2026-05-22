@@ -11,9 +11,9 @@ RUN apt-get update && \
         tar \
         sudo \
         ca-certificates \
-        gnupg && \
+        gnupg \
+        libicu74 && \
     rm -rf /var/lib/apt/lists/*
-
 # Install kubectl
 RUN curl -fsSL https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl && \
     chmod +x /usr/local/bin/kubectl
