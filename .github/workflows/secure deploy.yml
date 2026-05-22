@@ -145,6 +145,14 @@ jobs:
             sleep 5
           done
                   
+            # ====================================
+            # Allowed Request Token
+            # ====================================
+
+            kubectl create secret generic allowed-request-token \
+              -n ${{ vars.NAMESPACE }} \
+              --from-literal=allowed_request_token='${{ secrets.ALLOWED_REQUEST_TOKEN }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
 
             # ====================================
             # Envoy Proxy
@@ -176,7 +184,10 @@ jobs:
 
             helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx \
               --namespace ingress-nginx \
-              --create-namespace
+              --create-namespace \
+              --set controller.service.type=NodePort \
+              --set controller.admissionWebhooks.enabled=false \
+            
 
             kubectl apply -f /tmp/server-setup/ngnix/nginx-config.yaml
 
@@ -231,14 +242,6 @@ jobs:
             kubectl create secret generic pgbouncer-users \
               -n yahyeapps \
               --from-literal="userlist.txt=\"${{ secrets.PG_USER }}\" \"${{ secrets.PG_PASSWORD }}\"" \
-              --dry-run=client -o yaml | kubectl apply -f -
-            # ====================================
-            # Allowed Request Token
-            # ====================================
-
-            kubectl create secret generic allowed-request-token \
-              -n ${{ vars.NAMESPACE }} \
-              --from-literal=allowed_request_token='${{ secrets.ALLOWED_REQUEST_TOKEN }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
             # ====================================
