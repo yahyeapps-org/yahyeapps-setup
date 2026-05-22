@@ -175,11 +175,8 @@ jobs:
             # ====================================
 
             helm upgrade --install nginx-ingress \
-              ingress-nginx/ingress-nginx \
-              --namespace ${{ vars.NAMESPACE }} \
-              --set controller.allowSnippetAnnotations=true \
-              --set controller.admissionWebhooks.enabled=false \
-              --set controller.image.pullPolicy=IfNotPresent
+            --namespace ingress-nginx \
+              --create-namespace
 
             kubectl apply -f /tmp/server-setup/ngnix/nginx-config.yaml
 

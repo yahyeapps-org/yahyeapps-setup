@@ -1,22 +1,25 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-forward-proxy
+  name: nginx-proxy-config
   namespace: yahyeapps
+
 data:
-  default.conf: |
+  default.conf.template: |
+    map $http_x_yahyeapps_verify $auth_ok {
+        default 0;
+        "$ALLOWED_REQUEST_TOKEN" 1;
+    }
+
     server {
         listen 3128;
 
         resolver 1.1.1.1 8.8.8.8 9.9.9.9 valid=30s ipv6=off;
+
         location / {
 
-            # =========================
-            # 🔐 SECURITY CHECK (IMPORTANT)
-            # =========================
-
-            if ($http_x_yahyeapps_verify != $ALLOWED_REQUEST_TOKEN) {
-                return 403 "Forbidden";
+            if ($auth_ok = 0) {
+                return 403;
             }
 
             proxy_pass http://$host$request_uri;

@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-service-github-runner
+  name: github-actions-runner
   namespace: git-runners
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: github-runner
+      app: github-actions-runner
   template:
     metadata:
       labels:
-        app: github-runner
+        app: github-actions-runner
     spec:
       containers:
         - name: runner
@@ -22,12 +22,12 @@ spec:
             - name: RUNNER_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: github-runner-token
+                  name: github-actions-runner-token
                   key: RUNNER_TOKEN
             - name: RUNNER_NAME
               value: "k3s-runner-1"
             - name: RUNNER_LABELS
-              value: "billing-yahyeapps"
+              value: "yahyeapps"
           volumeMounts:
             - name: kubeconfig
               mountPath: /home/runner/.kube
